@@ -13,11 +13,12 @@ public class MovieContext : DbContext
     {
     }
 
-    public DbSet<Movie> Movie { get; set; } = default!;
+    public DbSet<Movie> Movies { get; set; } = default!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
 
         modelBuilder.Entity<Movie>()
             .HasOne(m => m.Detailes)

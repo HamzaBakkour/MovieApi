@@ -12,4 +12,7 @@ public class Movie
     public ICollection<Review> Reviews { get; set; } = new List<Review>();
 
     public ICollection<Actor> Actors { get; set; } = new List<Actor>();
+
+    public ICollection<Genre> Genres { get; set; } = new List<Genre>();
+
 }
