@@ -11,24 +11,28 @@ public class SeedData
 {
     private static Faker faker = new Faker("en");
 
+    private static int numberOfMovies = 2;
+    private static int numberOfActors = 2;
+    private static int numberOfGenres = 2;
+    private static int maxNumberOfReviews = 2;
+
+
     internal static async Task InitAsync(MovieContext context)
     {
 
+
         if (await context.Movies.AnyAsync()) return;
 
-        var genres = GenerateGenres(10);
+        var genres = GenerateGenres(numberOfGenres);
         await context.AddRangeAsync(genres);
 
-        var actors = GenerateActors(100);
+        var actors = GenerateActors(numberOfActors);
         await context.AddRangeAsync(actors);
 
-        var movies = GenerateMovies(30, actors, genres);
+        var movies = GenerateMovies(numberOfMovies, actors, genres);
         await context.AddRangeAsync(movies);
 
         await context.SaveChangesAsync();
-
-
-
     }
 
 
@@ -103,7 +107,7 @@ public class SeedData
         for (int i = 0; i < numberOfMovies; i++)
         {
             var genre = faker.PickRandom(genreList);
-            var movieActors = faker.PickRandom(actorList, faker.Random.Int(2, 4)).ToList();
+            var movieActors = faker.PickRandom(actorList, faker.Random.Int(1, numberOfActors)).ToList();
 
 
             var movie = new Movie
@@ -111,7 +115,7 @@ public class SeedData
                 Title = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(faker.Commerce.ProductName()),
                 Year = faker.Date.Between(new DateTime(currentYear - 40, 1, 1), DateTime.UtcNow).Year,
                 Duration = faker.Random.Int(1, 150),
-                Genres = faker.PickRandom(genreList, faker.Random.Int(1, 3)).ToList(),
+                Genres = faker.PickRandom(genreList, faker.Random.Int(1, numberOfGenres)).ToList(),
                 Actors = movieActors,
                 Detailes = new MovieDetailes
                 {
@@ -119,7 +123,7 @@ public class SeedData
                     Language = faker.Random.ArrayElement(new[] { "sv", "en", "fr", "de", "ar" }),
                     Budget = faker.Random.Int(1_000_000, 100_000_000)
                 },
-                Reviews = GenerateReviews(faker.Random.Int(1, 3))
+                Reviews = GenerateReviews(faker.Random.Int(0, maxNumberOfReviews))
 
             }; 
 
