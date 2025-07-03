@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -59,13 +60,15 @@ public class MoviesController : ControllerBase
             ))
             .ToListAsync();
 
+
         return Ok(movies);
 
     }
 
     // GET: api/Movies/5
     [HttpGet("{id}")]
-    public async Task<ActionResult<MovieAllDetailsDto>> GetMovie(int id, [FromQuery] MovieQueryOptionsDto options)
+    public async Task<ActionResult<MovieAllDetailsDto>> GetMovie([FromRoute, Range(0, int.MaxValue)] int id,
+                                                                    [FromQuery] MovieQueryOptionsDto options)
     {
         IQueryable<Movie> query = _context.Movies.Where(m => m.Id == id);
 
@@ -112,7 +115,7 @@ public class MoviesController : ControllerBase
 
 
     [HttpGet("{id}/details")]
-    public async Task<ActionResult<MovieAllDetailsDto>> GetMovieDetails(int id)
+    public async Task<ActionResult<MovieAllDetailsDto>> GetMovieDetails([FromRoute, Range(0, int.MaxValue)] int id)
     {
         var movie = await _context.Movies
             .Include(m => m.Detailes)
@@ -122,7 +125,7 @@ public class MoviesController : ControllerBase
             .FirstOrDefaultAsync(m => m.Id == id);
 
         if (movie == null)
-            return NotFound($"Movie with ID {id} not found.");
+            return NotFound();
 
         var response = new MovieAllDetailsDto(
             movie.Id,
@@ -153,7 +156,7 @@ public class MoviesController : ControllerBase
     // PUT: api/Movies/5
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPut("{id}")]
-    public async Task<IActionResult> PutMovie(int id, MovieUpdateDto dto)
+    public async Task<IActionResult> PutMovie([FromRoute, Range(0, int.MaxValue)] int id, [FromBody] MovieUpdateDto dto)
     {
         var movie = await _context.Movies.FirstOrDefaultAsync(m => m.Id == id);
 
@@ -190,7 +193,7 @@ public class MoviesController : ControllerBase
     // POST: api/Movies
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPost]
-    public async Task<ActionResult<MovieDto>> PostMovie(MovieCreateDto dto)
+    public async Task<ActionResult<MovieDto>> PostMovie([FromBody] MovieCreateDto dto)
     {
         var movie = new Movie
         {
@@ -209,7 +212,7 @@ public class MoviesController : ControllerBase
 
     // DELETE: api/Movies/5
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteMovie(int id)
+    public async Task<IActionResult> DeleteMovie([FromRoute, Range(0, int.MaxValue)] int id)
     {
         var movie = await _context.Movies.FindAsync(id);
         if (movie == null)

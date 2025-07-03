@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MovieApi.Models.Dtos;
 using MovieApi.Models.Entities;
@@ -28,7 +29,7 @@ public class ActorsController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<Actor>> PostActor(ActorCreateDto dto)
+    public async Task<ActionResult<ActorDto>> PostActor([FromBody] ActorCreateDto dto)
     {
         var actor = new Actor
         {
@@ -41,12 +42,13 @@ public class ActorsController : ControllerBase
 
         var response = new ActorDto(actor.Id, actor.Name, actor.BirthYear);
 
-        return Ok(response);
+        return Created(string.Empty, response);
 
     }
-
+    
     [HttpPost("/api/movies/{movieId}/actors/{actorId}")]
-    public async Task<IActionResult> AddActorToMovie(int movieId, int actorId)
+    public async Task<IActionResult> AddActorToMovie([FromRoute, Range(0, int.MaxValue)] int movieId,
+                                                        [FromRoute, Range(0, int.MaxValue)] int actorId)
     {
         var movie = await _context.Movies
             .Include(m => m.Actors)
@@ -74,7 +76,7 @@ public class ActorsController : ControllerBase
         /// ToDo: Change the method from GetMovie to the method
         /// that return Movie detailes
         return CreatedAtAction(
-            nameof(MoviesController.GetMovie), 
+            nameof(MoviesController.GetMovieDetails), 
             "Movies",                          
             new { id = movie.Id },            
             response                          

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MovieApi.Models.Dtos;
 using MovieApi.Models.Entities;
@@ -21,7 +22,7 @@ public class ReviewsController : ControllerBase
 
 
     [HttpPost("/api/movies/{movieId}/reviews")]
-    public async Task<ActionResult<ReviewDetailsDto>> PostReview(int movieId, ReviewCreateDto dto)
+    public async Task<ActionResult<ReviewDetailsDto>> PostReview([FromRoute, Range(0, int.MaxValue)] int movieId, [FromBody] ReviewCreateDto dto)
     {
 
         var movie = await _context.Movies.FindAsync(movieId);
@@ -46,15 +47,16 @@ public class ReviewsController : ControllerBase
                                         review.Rating,
                                         new MovieDto(movie.Id, movie.Title, movie.Year, movie.Duration)
                                         );
-        /// ToDo: Return a CreatedAtAction
-        return Ok(response);
+
+        return CreatedAtAction(nameof(GetMovieReviews), new { movieId = movie.Id }, response);
+
     }
 
 
 
 
     [HttpGet("/api/movies/{movieId}/reviews")]
-    public async Task<ActionResult<ReviewDetailsDto>> GetMovieReviews(int movieId)
+    public async Task<ActionResult<ReviewDetailsDto>> GetMovieReviews([FromRoute, Range(0, int.MaxValue)] int movieId)
     {
 
         var movie = await _context.Movies
@@ -65,12 +67,14 @@ public class ReviewsController : ControllerBase
             return NotFound($"Movie with ID {movieId} not found.");
 
 
-        var response = new ReviewMovieDto(new MovieDto(movie.Id, movie.Title, movie.Year, movie.Duration),
-                                             movie.Reviews
-                                                    .Select(r => new ReviewDto(r.ReviewerName, r.Comment ?? string.Empty, r.Rating))
-                                                    .ToList()
-                                            );
-        /// ToDo: Return correct type of response
+        var response = new ReviewMovieDto(new MovieDto(movie.Id,
+                                                        movie.Title,
+                                                        movie.Year,
+                                                        movie.Duration),
+                                                        movie.Reviews
+                                                            .Select(r => new ReviewDto(r.ReviewerName, r.Comment ?? string.Empty, r.Rating))
+                                                            .ToList());
+
         return Ok(response);
     }
 }
