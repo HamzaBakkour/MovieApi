@@ -3,5 +3,5 @@
 
 
 public record ReviewDto( string ReviewerName,
-                         string Comment,
+                         string? Comment,
                          int Rating);

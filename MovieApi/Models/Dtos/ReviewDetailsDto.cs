@@ -1,6 +1,6 @@
 ﻿namespace MovieApi.Models.Dtos;
 
-public record ReviewDetailDto(int Id,
+public record ReviewDetailsDto(int Id,
                         string ReviewerName,
                         string Comment,
                         int Rating,

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using MovieApi.Models.Dtos;
 using MovieApi.Models.Entities;
 
@@ -23,37 +24,152 @@ public class MoviesController : ControllerBase
 
     // GET: api/Movies
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Movie>>> GetMovie()
+    public async Task<ActionResult<IEnumerable<MovieDto>>> GetMovie([FromQuery] string? genre,
+                                                                    [FromQuery] int? year,
+                                                                    [FromQuery] string? actor)
     {
-        return await _context.Movies.ToListAsync();
+
+        var query = _context.Movies
+                            .Include(m => m.Genres)
+                            .Include(m => m.Actors)
+                            .AsQueryable();
+
+
+        if (!string.IsNullOrWhiteSpace(genre))
+        {
+            query = query.Where(m => m.Genres.Any(g => g.Name == genre));
+        }
+
+        if (year.HasValue)
+        {
+            query = query.Where(m => m.Year == year.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(actor))
+        {
+            query = query.Where(m => m.Actors.Any(a => a.Name.ToLower() == actor.ToLower()));
+        }
+
+        var movies = await query
+            .Select(movie => new MovieDto(
+                                    movie.Id,
+                                    movie.Title,
+                                    movie.Year,
+                                    movie.Duration
+            ))
+            .ToListAsync();
+
+        return Ok(movies);
+
     }
 
     // GET: api/Movies/5
     [HttpGet("{id}")]
-    public async Task<ActionResult<Movie>> GetMovie(int id)
+    public async Task<ActionResult<MovieAllDetailsDto>> GetMovie(int id, [FromQuery] MovieQueryOptionsDto options)
     {
-        var movie = await _context.Movies.FindAsync(id);
+        IQueryable<Movie> query = _context.Movies.Where(m => m.Id == id);
+
+        if (options.withActors)
+            query = query.Include(m => m.Actors);
+
+        if (options.withGenres)
+            query = query.Include(m => m.Genres);
+
+        if (options.withReviews)
+            query = query.Include(m => m.Reviews);
+
+        if (options.withDetails)
+            query = query.Include(m => m.Detailes);
+
+        var movie = await query.FirstOrDefaultAsync();
 
         if (movie == null)
-        {
             return NotFound();
-        }
 
-        return movie;
+        var response = new MovieAllDetailsDto(
+            movie.Id,
+            movie.Title,
+            movie.Year,
+            movie.Duration,
+            options.withDetails && movie.Detailes != null ?
+                 new MovieDetailesDto(movie.Detailes.Synopsis, movie.Detailes.Language, movie.Detailes.Budget)
+                : null,
+            options.withActors ?
+                 movie.Actors.Select(a => new ActorDto(a.Id, a.Name, a.BirthYear)).ToList()
+                : null,
+            options.withGenres ?
+                 movie.Genres.Select(g => new GenreDto(g.Name)).ToList()
+                : null,
+            options.withReviews ?
+                 movie.Reviews.Select(r => new ReviewDto(r.ReviewerName, r.Comment, r.Rating)).ToList()
+                : null
+        );
+
+        return Ok(response);
+
     }
+
+
+
+    [HttpGet("{id}/details")]
+    public async Task<ActionResult<MovieAllDetailsDto>> GetMovieDetails(int id)
+    {
+        var movie = await _context.Movies
+            .Include(m => m.Detailes)
+            .Include(m => m.Actors)
+            .Include(m => m.Genres)
+            .Include(m => m.Reviews)
+            .FirstOrDefaultAsync(m => m.Id == id);
+
+        if (movie == null)
+            return NotFound($"Movie with ID {id} not found.");
+
+        var response = new MovieAllDetailsDto(
+            movie.Id,
+            movie.Title,
+            movie.Year,
+            movie.Duration,
+            movie.Detailes != null ?
+                 new MovieDetailesDto(movie.Detailes.Synopsis, movie.Detailes.Language, movie.Detailes.Budget)
+                : null,
+            movie.Actors != null ?
+                 movie.Actors.Select(a => new ActorDto(a.Id, a.Name, a.BirthYear)).ToList()
+                : null,
+            movie.Genres != null ?
+                 movie.Genres.Select(g => new GenreDto(g.Name)).ToList()
+                : null,
+            movie.Reviews != null ?
+                 movie.Reviews.Select(r => new ReviewDto(r.ReviewerName, r.Comment, r.Rating)).ToList()
+                : null
+        );
+
+        return Ok(response);
+    }
+
+
+
+
 
     // PUT: api/Movies/5
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPut("{id}")]
-    public async Task<IActionResult> PutMovie(int id, Movie movie)
+    public async Task<IActionResult> PutMovie(int id, MovieUpdateDto dto)
     {
+        var movie = await _context.Movies.FirstOrDefaultAsync(m => m.Id == id);
 
-        if (id != movie.Id)
-        {
-            return BadRequest();
-        }
+        if (movie is null)
+            return NotFound();
 
-        _context.Entry(movie).State = EntityState.Modified;
+
+
+        if (!string.IsNullOrWhiteSpace(dto.Title))
+            movie.Title = dto.Title;
+
+        if (dto.Year.HasValue)
+            movie.Year = dto.Year.Value;
+
+        if (dto.Duration.HasValue)
+            movie.Duration = dto.Duration.Value;
 
         try
         {
@@ -62,16 +178,13 @@ public class MoviesController : ControllerBase
         catch (DbUpdateConcurrencyException)
         {
             if (!MovieExists(id))
-            {
                 return NotFound();
-            }
             else
-            {
                 throw;
-            }
         }
 
-        return NoContent();
+        var response = new MovieDto(movie.Id, movie.Title, movie.Year, movie.Duration);
+        return Ok(response);
     }
 
     // POST: api/Movies

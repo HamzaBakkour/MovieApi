@@ -21,7 +21,7 @@ public class ReviewsController : ControllerBase
 
 
     [HttpPost("/api/movies/{movieId}/reviews")]
-    public async Task<ActionResult<ReviewDetailDto>> PostReview(int movieId, ReviewCreateDto dto)
+    public async Task<ActionResult<ReviewDetailsDto>> PostReview(int movieId, ReviewCreateDto dto)
     {
 
         var movie = await _context.Movies.FindAsync(movieId);
@@ -40,9 +40,9 @@ public class ReviewsController : ControllerBase
         _context.Reviews.Add(review);
         await _context.SaveChangesAsync();
 
-        var response = new ReviewDetailDto(review.Id,
+        var response = new ReviewDetailsDto(review.Id,
                                         review.ReviewerName,
-                                        review.Comment,
+                                        review.Comment ?? string.Empty,
                                         review.Rating,
                                         new MovieDto(movie.Id, movie.Title, movie.Year, movie.Duration)
                                         );
@@ -53,9 +53,8 @@ public class ReviewsController : ControllerBase
 
 
 
-
     [HttpGet("/api/movies/{movieId}/reviews")]
-    public async Task<ActionResult<ReviewDetailDto>> GetMovieReviews(int movieId)
+    public async Task<ActionResult<ReviewDetailsDto>> GetMovieReviews(int movieId)
     {
 
         var movie = await _context.Movies
@@ -68,11 +67,10 @@ public class ReviewsController : ControllerBase
 
         var response = new ReviewMovieDto(new MovieDto(movie.Id, movie.Title, movie.Year, movie.Duration),
                                              movie.Reviews
-                                                    .Select(r => new ReviewDto(r.ReviewerName, r.Comment, r.Rating))
+                                                    .Select(r => new ReviewDto(r.ReviewerName, r.Comment ?? string.Empty, r.Rating))
                                                     .ToList()
                                             );
         /// ToDo: Return correct type of response
         return Ok(response);
     }
-
 }
