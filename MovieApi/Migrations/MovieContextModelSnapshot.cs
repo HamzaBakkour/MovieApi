@@ -32,7 +32,7 @@ namespace MovieApi.Migrations
 
                     b.HasIndex("MoviesId");
 
-                    b.ToTable("ActorMovie");
+                    b.ToTable("ActorMovie", (string)null);
                 });
 
             modelBuilder.Entity("GenreMovie", b =>
@@ -47,7 +47,7 @@ namespace MovieApi.Migrations
 
                     b.HasIndex("MoviesId");
 
-                    b.ToTable("GenreMovie");
+                    b.ToTable("GenreMovie", (string)null);
                 });
 
             modelBuilder.Entity("MovieApi.Models.Entities.Actor", b =>
@@ -67,7 +67,7 @@ namespace MovieApi.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Actors");
+                    b.ToTable("Actors", (string)null);
                 });
 
             modelBuilder.Entity("MovieApi.Models.Entities.Genre", b =>
@@ -84,7 +84,7 @@ namespace MovieApi.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Genre");
+                    b.ToTable("Genre", (string)null);
                 });
 
             modelBuilder.Entity("MovieApi.Models.Entities.Movie", b =>
@@ -107,7 +107,7 @@ namespace MovieApi.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Movies");
+                    b.ToTable("Movies", (string)null);
                 });
 
             modelBuilder.Entity("MovieApi.Models.Entities.MovieDetailes", b =>
@@ -137,7 +137,7 @@ namespace MovieApi.Migrations
                     b.HasIndex("MovieId")
                         .IsUnique();
 
-                    b.ToTable("MovieDetailes");
+                    b.ToTable("MovieDetailes", (string)null);
                 });
 
             modelBuilder.Entity("MovieApi.Models.Entities.Review", b =>
@@ -165,7 +165,7 @@ namespace MovieApi.Migrations
 
                     b.HasIndex("MovieId");
 
-                    b.ToTable("Reviews");
+                    b.ToTable("Reviews", (string)null);
                 });
 
             modelBuilder.Entity("ActorMovie", b =>
