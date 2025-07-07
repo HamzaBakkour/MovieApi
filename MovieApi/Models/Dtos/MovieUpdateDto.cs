@@ -4,12 +4,13 @@ namespace MovieApi.Models.Dtos;
 
 public class MovieUpdateDto
 {
+    [Required]
     [StringLength(150)]
-    public string? Title { get; set; }
+    public string Title { get; set; } = null!;
 
     [Range(1800, 3000)]
-    public int? Year { get; set; }
+    public int Year { get; set; }
 
     [Range(1, 600)]
-    public int? Duration { get; set; }
+    public int Duration { get; set; }
 }

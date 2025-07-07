@@ -109,7 +109,6 @@ public class MoviesController : ControllerBase
         );
 
         return Ok(response);
-
     }
 
 
@@ -117,34 +116,30 @@ public class MoviesController : ControllerBase
     [HttpGet("{id}/details")]
     public async Task<ActionResult<MovieAllDetailsDto>> GetMovieDetails([FromRoute, Range(0, int.MaxValue)] int id)
     {
-        var movie = await _context.Movies
-            .Include(m => m.Detailes)
-            .Include(m => m.Actors)
-            .Include(m => m.Genres)
-            .Include(m => m.Reviews)
-            .FirstOrDefaultAsync(m => m.Id == id);
+        var response = await _context.Movies
+                        .Where(m => m.Id == id)
+                        .Select( movie => new MovieAllDetailsDto(
+                                    movie.Id,
+                                    movie.Title,
+                                    movie.Year,
+                                    movie.Duration,
+                                    movie.Detailes != null ?
+                                            new MovieDetailesDto(movie.Detailes.Synopsis, movie.Detailes.Language, movie.Detailes.Budget)
+                                        : null,
+                                    movie.Actors != null ?
+                                            movie.Actors.Select(a => new ActorDto(a.Id, a.Name, a.BirthYear)).ToList()
+                                        : null,
+                                    movie.Genres != null ?
+                                            movie.Genres.Select(g => new GenreDto(g.Name)).ToList()
+                                        : null,
+                                    movie.Reviews != null ?
+                                            movie.Reviews.Select(r => new ReviewDto(r.ReviewerName, r.Comment, r.Rating)).ToList()
+                                        : null
+                                    ))
+                                    .FirstOrDefaultAsync();
 
-        if (movie == null)
+        if (response == null)
             return NotFound();
-
-        var response = new MovieAllDetailsDto(
-            movie.Id,
-            movie.Title,
-            movie.Year,
-            movie.Duration,
-            movie.Detailes != null ?
-                 new MovieDetailesDto(movie.Detailes.Synopsis, movie.Detailes.Language, movie.Detailes.Budget)
-                : null,
-            movie.Actors != null ?
-                 movie.Actors.Select(a => new ActorDto(a.Id, a.Name, a.BirthYear)).ToList()
-                : null,
-            movie.Genres != null ?
-                 movie.Genres.Select(g => new GenreDto(g.Name)).ToList()
-                : null,
-            movie.Reviews != null ?
-                 movie.Reviews.Select(r => new ReviewDto(r.ReviewerName, r.Comment, r.Rating)).ToList()
-                : null
-        );
 
         return Ok(response);
     }
@@ -163,16 +158,10 @@ public class MoviesController : ControllerBase
         if (movie is null)
             return NotFound();
 
+        movie.Title = dto.Title;
+        movie.Year = dto.Year;
+        movie.Duration = dto.Duration;
 
-
-        if (!string.IsNullOrWhiteSpace(dto.Title))
-            movie.Title = dto.Title;
-
-        if (dto.Year.HasValue)
-            movie.Year = dto.Year.Value;
-
-        if (dto.Duration.HasValue)
-            movie.Duration = dto.Duration.Value;
 
         try
         {
@@ -202,8 +191,18 @@ public class MoviesController : ControllerBase
             Duration = dto.Duration,
         };
 
+        var movieDetails = new MovieDetailes
+        {
+            Synopsis = dto.Synopsis,
+            Language = dto.Language,
+            Budget = dto.Budget,
+            Movie = movie
+        };
+
         _context.Movies.Add(movie);
+        _context.MovieDetailes.Add(movieDetails);
         await _context.SaveChangesAsync();
+
 
         var response = new MovieDto(movie.Id, movie.Title, movie.Year, movie.Duration);
 

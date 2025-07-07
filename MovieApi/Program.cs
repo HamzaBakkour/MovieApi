@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MovieApi.Extensions;
+using MovieApi.Data;
 
 namespace MovieApi;
 
@@ -20,8 +21,19 @@ public class Program
             {
                 options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
             });
+
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddOpenApi();
+
+
+        builder.Services.AddAutoMapper(cfg =>
+        {
+            cfg.AddProfile<MapperProfile>();
+        });
+
+
+
+
 
         var app = builder.Build();
 
