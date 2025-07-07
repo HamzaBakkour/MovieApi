@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -17,10 +19,12 @@ namespace MovieApi.Controllers;
 public class MoviesController : ControllerBase
 {
     private readonly MovieContext _context;
+    private readonly IMapper mapper;
 
-    public MoviesController(MovieContext context)
+    public MoviesController(MovieContext context, IMapper mapper)
     {
         _context = context;
+        this.mapper = mapper;
     }
 
     // GET: api/Movies
@@ -51,14 +55,15 @@ public class MoviesController : ControllerBase
             query = query.Where(m => m.Actors.Any(a => a.Name.ToLower() == actor.ToLower()));
         }
 
-        var movies = await query
-            .Select(movie => new MovieDto(
-                                    movie.Id,
-                                    movie.Title,
-                                    movie.Year,
-                                    movie.Duration
-            ))
-            .ToListAsync();
+        //var movies = await query
+        //    .Select(movie => new MovieDto(
+        //                            movie.Id,
+        //                            movie.Title,
+        //                            movie.Year,
+        //                            movie.Duration
+        //    ))
+        //    .ToListAsync();
+        var movies = await mapper.ProjectTo<MovieDto>(_context.Movies).ToListAsync();
 
 
         return Ok(movies);
@@ -98,13 +103,16 @@ public class MoviesController : ControllerBase
                  new MovieDetailesDto(movie.Detailes.Synopsis, movie.Detailes.Language, movie.Detailes.Budget)
                 : null,
             options.withActors ?
-                 movie.Actors.Select(a => new ActorDto(a.Id, a.Name, a.BirthYear)).ToList()
+                 //movie.Actors.Select(a => new ActorDto(a.Id, a.Name, a.BirthYear)).ToList()
+                mapper.ProjectTo<ActorDto>(_context.Actors).ToList()
                 : null,
             options.withGenres ?
-                 movie.Genres.Select(g => new GenreDto(g.Name)).ToList()
+                 //movie.Genres.Select(g => new GenreDto(g.Name)).ToList()
+                 mapper.ProjectTo<GenreDto>(_context.Genres).ToList()
                 : null,
             options.withReviews ?
-                 movie.Reviews.Select(r => new ReviewDto(r.ReviewerName, r.Comment, r.Rating)).ToList()
+                 //movie.Reviews.Select(r => new ReviewDto(r.ReviewerName, r.Comment, r.Rating)).ToList()
+                 mapper.ProjectTo<ReviewDto>(_context.Reviews).ToList()
                 : null
         );
 
@@ -116,27 +124,33 @@ public class MoviesController : ControllerBase
     [HttpGet("{id}/details")]
     public async Task<ActionResult<MovieAllDetailsDto>> GetMovieDetails([FromRoute, Range(0, int.MaxValue)] int id)
     {
+        //var response = await _context.Movies
+        //                .Where(m => m.Id == id)
+        //                .Select( movie => new MovieAllDetailsDto(
+        //                            movie.Id,
+        //                            movie.Title,
+        //                            movie.Year,
+        //                            movie.Duration,
+        //                            movie.Detailes != null ?
+        //                                new MovieDetailesDto(movie.Detailes.Synopsis, movie.Detailes.Language, movie.Detailes.Budget)
+        //                                : null,
+        //                            movie.Actors != null ?
+        //                                    movie.Actors.Select(a => new ActorDto(a.Id, a.Name, a.BirthYear)).ToList()
+        //                                : null,
+        //                            movie.Genres != null ?
+        //                                    movie.Genres.Select(g => new GenreDto(g.Name)).ToList()
+        //                                : null,
+        //                            movie.Reviews != null ?
+        //                                    movie.Reviews.Select(r => new ReviewDto(r.ReviewerName, r.Comment, r.Rating)).ToList()
+        //                                : null
+        //                            ))
+        //                            .FirstOrDefaultAsync();
+
+
         var response = await _context.Movies
-                        .Where(m => m.Id == id)
-                        .Select( movie => new MovieAllDetailsDto(
-                                    movie.Id,
-                                    movie.Title,
-                                    movie.Year,
-                                    movie.Duration,
-                                    movie.Detailes != null ?
-                                            new MovieDetailesDto(movie.Detailes.Synopsis, movie.Detailes.Language, movie.Detailes.Budget)
-                                        : null,
-                                    movie.Actors != null ?
-                                            movie.Actors.Select(a => new ActorDto(a.Id, a.Name, a.BirthYear)).ToList()
-                                        : null,
-                                    movie.Genres != null ?
-                                            movie.Genres.Select(g => new GenreDto(g.Name)).ToList()
-                                        : null,
-                                    movie.Reviews != null ?
-                                            movie.Reviews.Select(r => new ReviewDto(r.ReviewerName, r.Comment, r.Rating)).ToList()
-                                        : null
-                                    ))
-                                    .FirstOrDefaultAsync();
+            .Where(m => m.Id == id)
+            .ProjectTo<MovieAllDetailsDto>(mapper.ConfigurationProvider)
+            .FirstOrDefaultAsync();
 
         if (response == null)
             return NotFound();
@@ -158,10 +172,11 @@ public class MoviesController : ControllerBase
         if (movie is null)
             return NotFound();
 
-        movie.Title = dto.Title;
-        movie.Year = dto.Year;
-        movie.Duration = dto.Duration;
+        //movie.Title = dto.Title;
+        // movie.Year = dto.Year;
+        //movie.Duration = dto.Duration;
 
+        mapper.Map(dto, movie); 
 
         try
         {
@@ -175,7 +190,9 @@ public class MoviesController : ControllerBase
                 throw;
         }
 
-        var response = new MovieDto(movie.Id, movie.Title, movie.Year, movie.Duration);
+        //var response = new MovieDto(movie.Id, movie.Title, movie.Year, movie.Duration);
+        var response = mapper.Map<MovieDto>(movie); 
+        
         return Ok(response);
     }
 
@@ -184,28 +201,37 @@ public class MoviesController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<MovieDto>> PostMovie([FromBody] MovieCreateDto dto)
     {
-        var movie = new Movie
-        {
-            Title = dto.Title,
-            Year = dto.Year,
-            Duration = dto.Duration,
-        };
 
-        var movieDetails = new MovieDetailes
-        {
-            Synopsis = dto.Synopsis,
-            Language = dto.Language,
-            Budget = dto.Budget,
-            Movie = movie
-        };
+
+        //var movie = new Movie
+        //{
+        //    Title = dto.Title,
+        //    Year = dto.Year,
+        //    Duration = dto.Duration,
+        //};
+
+        //var movieDetails = new MovieDetailes
+        //{
+        //    Synopsis = dto.Synopsis,
+        //    Language = dto.Language,
+        //    Budget = dto.Budget,
+        //    Movie = movie
+        //};
+
+        //_context.Movies.Add(movie);
+        //_context.MovieDetailes.Add(movieDetails);
+
+
+        var movie = mapper.Map<Movie>(dto);
+        var movieDetails = mapper.Map<MovieDetailes>(dto.Detailes);
+
+        movie.Detailes = movieDetails;
 
         _context.Movies.Add(movie);
-        _context.MovieDetailes.Add(movieDetails);
         await _context.SaveChangesAsync();
 
-
-        var response = new MovieDto(movie.Id, movie.Title, movie.Year, movie.Duration);
-
+        //var response = new MovieDto(movie.Id, movie.Title, movie.Year, movie.Duration);
+        var response = mapper.Map<MovieDto>(movie);
         return CreatedAtAction(nameof(GetMovie), new { id = response.Id }, response);
     }
 

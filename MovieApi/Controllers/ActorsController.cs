@@ -73,8 +73,7 @@ public class ActorsController : ControllerBase
                                             movie.Actors
                                             .Select(a => new ActorDto(a.Id, a.Name, a.BirthYear))
                                             .ToList());
-        /// ToDo: Change the method from GetMovie to the method
-        /// that return Movie detailes
+
         return CreatedAtAction(
             nameof(MoviesController.GetMovieDetails), 
             "Movies",                          

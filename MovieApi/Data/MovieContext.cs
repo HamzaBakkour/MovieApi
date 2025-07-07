@@ -17,6 +17,7 @@ public class MovieContext : DbContext
     public DbSet<MovieDetailes> MovieDetailes { get; set; } = default!;
     public DbSet<Actor> Actors { get; set; } = default!;
     public DbSet<Review> Reviews { get; set; } = default!;
+    public DbSet<Genre> Genres { get; set; } = default!;
 
 
 
