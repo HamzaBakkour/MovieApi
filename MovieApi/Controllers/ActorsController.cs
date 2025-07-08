@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MovieApi.Models.Dtos;
 using MovieApi.Models.Entities;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace MovieApi.Controllers;
 

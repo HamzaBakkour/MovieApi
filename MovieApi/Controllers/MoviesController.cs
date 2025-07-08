@@ -11,11 +11,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using MovieApi.Models.Dtos;
 using MovieApi.Models.Entities;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace MovieApi.Controllers;
 
 [Route("api/movies")]
 [ApiController]
+[Produces("application/json")]
 public class MoviesController : ControllerBase
 {
     private readonly MovieContext _context;
@@ -29,6 +31,8 @@ public class MoviesController : ControllerBase
 
     // GET: api/Movies
     [HttpGet]
+    [SwaggerOperation(Summary = "Get all movies", Description = "Gets all movies.")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<MovieDto>))]
     public async Task<ActionResult<IEnumerable<MovieDto>>> GetMovie([FromQuery] string? genre,
                                                                     [FromQuery] int? year,
                                                                     [FromQuery] string? actor)
@@ -72,6 +76,9 @@ public class MoviesController : ControllerBase
 
     // GET: api/Movies/5 
     [HttpGet("{id}")]
+    [SwaggerOperation(Summary = "Get movie by ID", Description = "Returns full details of a movie.")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(MovieAllDetailsDto))]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<MovieAllDetailsDto>> GetMovie([FromRoute, Range(0, int.MaxValue)] int id,
                                                                     [FromQuery] MovieQueryOptionsDto options)
     {
@@ -125,6 +132,9 @@ public class MoviesController : ControllerBase
 
 
     [HttpGet("{id}/details")]
+    [SwaggerOperation(Summary = "Get movie detiales by ID", Description = "Returns full details of a movie.")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(MovieAllDetailsDto))]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<MovieAllDetailsDto>> GetMovieDetails([FromRoute, Range(0, int.MaxValue)] int id)
     {
         //var response = await _context.Movies
@@ -150,15 +160,20 @@ public class MoviesController : ControllerBase
         //                            .FirstOrDefaultAsync();
 
 
-        var response = await _context.Movies
-            .Where(m => m.Id == id)
-            .ProjectTo<MovieAllDetailsDto>(mapper.ConfigurationProvider)
-            .FirstOrDefaultAsync();
+        var movie = await _context.Movies
+        .Include(m => m.Actors)
+        .Include(m => m.Genres)
+        .Include(m => m.Reviews)
+        .Include(m => m.Detailes)
+        .FirstOrDefaultAsync(m => m.Id == id);
+
+        var response = mapper.Map<MovieAllDetailsDto>(movie);
 
         if (response == null)
             return NotFound();
 
         return Ok(response);
+
     }
 
 
@@ -168,6 +183,11 @@ public class MoviesController : ControllerBase
     // PUT: api/Movies/5
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPut("{id}")]
+    [SwaggerOperation(Summary = "Update movie", Description = "Updates an existing movie by ID.")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(MovieUpdateDto))]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ProblemDetails))]
     public async Task<IActionResult> PutMovie([FromRoute, Range(0, int.MaxValue)] int id, [FromBody] MovieUpdateDto dto)
     {
         var movie = await _context.Movies.FirstOrDefaultAsync(m => m.Id == id);
@@ -202,9 +222,11 @@ public class MoviesController : ControllerBase
     // POST: api/Movies
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPost]
+    [SwaggerOperation(Summary = "Create movie", Description = "Creates a new movie.")]
+    [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(MovieDto))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<MovieDto>> PostMovie([FromBody] MovieCreateDto dto)
     {
-
 
         //var movie = new Movie
         //{
@@ -240,6 +262,9 @@ public class MoviesController : ControllerBase
 
     // DELETE: api/Movies/5
     [HttpDelete("{id}")]
+    [SwaggerOperation(Summary = "Delete movie", Description = "Deletes a movie by ID.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteMovie([FromRoute, Range(0, int.MaxValue)] int id)
     {
         var movie = await _context.Movies.FindAsync(id);

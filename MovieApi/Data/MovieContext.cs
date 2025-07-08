@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using MovieApi.Data.Configurations;
 using MovieApi.Models.Entities;
 
 public class MovieContext : DbContext
@@ -25,14 +26,7 @@ public class MovieContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-
-        modelBuilder.Entity<Movie>()
-            .HasOne(m => m.Detailes)
-            .WithOne(d => d.Movie)
-            .HasForeignKey<MovieDetailes>(d => d.MovieId);
-
-        modelBuilder.Entity<MovieDetailes>()
-                    .HasIndex(d => d.MovieId)
-                    .IsUnique(); //This ensures one-to-one
+        modelBuilder.ApplyConfiguration(new MovieConfiguration());
+        modelBuilder.ApplyConfiguration(new MovieDetailesConfiguration());
     }
 }

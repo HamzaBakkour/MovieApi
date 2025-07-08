@@ -22,8 +22,13 @@ public class Program
                 options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
             });
 
+        builder.Services.AddSwaggerGen(opt =>
+        {
+            opt.EnableAnnotations();
+        });
+
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-        builder.Services.AddOpenApi();
+        //builder.Services.AddOpenApi();
 
 
         builder.Services.AddAutoMapper(cfg =>
@@ -40,13 +45,16 @@ public class Program
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
         {
-            app.MapOpenApi();
+            //app.MapOpenApi();
+
+            app.UseSwagger();
+            app.UseSwaggerUI(opt =>
+            {
+                opt.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+            });
+
             await app.SeedDataAsync();
 
-            app.UseSwaggerUI(options =>
-            {
-                options.SwaggerEndpoint("/openapi/v1.json", "v1");
-            });
         }
 
         app.UseHttpsRedirection();

@@ -11,9 +11,6 @@ public class MapperProfile : Profile
 
         CreateMap<Movie, MovieDto>();
         CreateMap<Movie, MovieCreateDto>().ReverseMap();
-
-        CreateMap<MovieDetailes, MovieDetailesCreateDto>().ReverseMap();
-
         CreateMap<Movie, MovieUpdateDto>().ReverseMap()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.Detailes, opt => opt.Ignore())
@@ -33,10 +30,14 @@ public class MapperProfile : Profile
                     dest.Reviews = null;
             });
 
-        CreateMap<Actor, ActorDto>();
-        CreateMap<Genre, GenreDto>();
-        CreateMap<Review, ReviewDto>();
         CreateMap<MovieDetailes, MovieDetailesDto>();
+        CreateMap<MovieDetailes, MovieDetailesCreateDto>().ReverseMap();
+
+        CreateMap<Actor, ActorDto>();
+
+        CreateMap<Genre, GenreDto>();
+        
+        CreateMap<Review, ReviewDto>();
     }
 }
 
