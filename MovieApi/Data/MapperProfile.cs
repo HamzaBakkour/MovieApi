@@ -23,13 +23,13 @@ public class MapperProfile : Profile
         CreateMap<Movie, MovieAllDetailsDto>()
             .AfterMap((src, dest) =>
             {
-                if (src.Actors == null || src.Actors.Count == 0)
+                if (src.Actors?.Count == 0)
                     dest.Actors = null;
 
-                if (src.Genres == null || src.Genres.Count == 0)
+                if ( src.Genres?.Count == 0)
                     dest.Genres = null;
 
-                if (src.Reviews == null || src.Reviews.Count == 0)
+                if ( src.Reviews?.Count == 0)
                     dest.Reviews = null;
             });
 
@@ -38,7 +38,6 @@ public class MapperProfile : Profile
         CreateMap<Review, ReviewDto>();
         CreateMap<MovieDetailes, MovieDetailesDto>();
     }
-
 }
 
 
