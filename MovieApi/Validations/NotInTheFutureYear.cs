@@ -18,15 +18,15 @@ public class NotInTheFutureYear : ValidationAttribute
 
         int year;
 
-        if (value is string input)
+        if (value is string stringInput)
         {
-            input = input.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries).Last();
-            if (!int.TryParse(input, out year))
+            stringInput = stringInput.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries).Last();
+            if (!int.TryParse(stringInput, out year))
                 return false;
         }
-        else if (value is int intYear)
+        else if (value is int intInput)
         {
-            year = intYear;
+            year = intInput;
         }
         else {
             return false;
