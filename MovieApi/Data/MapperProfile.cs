@@ -20,7 +20,18 @@ public class MapperProfile : Profile
             .ForMember(dest => dest.Reviews, opt => opt.Ignore())
             .ForMember(dest => dest.Actors, opt => opt.Ignore())
             .ForMember(dest => dest.Genres, opt => opt.Ignore());
-        CreateMap<Movie, MovieAllDetailsDto>();
+        CreateMap<Movie, MovieAllDetailsDto>()
+            .AfterMap((src, dest) =>
+            {
+                if (src.Actors == null || src.Actors.Count == 0)
+                    dest.Actors = null;
+
+                if (src.Genres == null || src.Genres.Count == 0)
+                    dest.Genres = null;
+
+                if (src.Reviews == null || src.Reviews.Count == 0)
+                    dest.Reviews = null;
+            });
 
         CreateMap<Actor, ActorDto>();
         CreateMap<Genre, GenreDto>();

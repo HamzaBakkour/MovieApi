@@ -70,7 +70,7 @@ public class MoviesController : ControllerBase
 
     }
 
-    // GET: api/Movies/5
+    // GET: api/Movies/5 
     [HttpGet("{id}")]
     public async Task<ActionResult<MovieAllDetailsDto>> GetMovie([FromRoute, Range(0, int.MaxValue)] int id,
                                                                     [FromQuery] MovieQueryOptionsDto options)
@@ -94,27 +94,30 @@ public class MoviesController : ControllerBase
         if (movie == null)
             return NotFound();
 
-        var response = new MovieAllDetailsDto(
-            movie.Id,
-            movie.Title,
-            movie.Year,
-            movie.Duration,
-            options.withDetails && movie.Detailes != null ?
-                 new MovieDetailesDto(movie.Detailes.Synopsis, movie.Detailes.Language, movie.Detailes.Budget)
-                : null,
-            options.withActors ?
-                 //movie.Actors.Select(a => new ActorDto(a.Id, a.Name, a.BirthYear)).ToList()
-                mapper.ProjectTo<ActorDto>(_context.Actors).ToList()
-                : null,
-            options.withGenres ?
-                 //movie.Genres.Select(g => new GenreDto(g.Name)).ToList()
-                 mapper.ProjectTo<GenreDto>(_context.Genres).ToList()
-                : null,
-            options.withReviews ?
-                 //movie.Reviews.Select(r => new ReviewDto(r.ReviewerName, r.Comment, r.Rating)).ToList()
-                 mapper.ProjectTo<ReviewDto>(_context.Reviews).ToList()
-                : null
-        );
+        //var response = new MovieAllDetailsDto(
+        //    movie.Id,
+        //    movie.Title,
+        //    movie.Year,
+        //    movie.Duration,
+        //    options.withDetails && movie.Detailes != null ?
+        //         //new MovieDetailesDto(movie.Detailes.Synopsis, movie.Detailes.Language, movie.Detailes.Budget)
+        //         mapper.Map< MovieDetailesDto >(movie.Detailes)
+        //        : null,
+        //    options.withActors ?
+        //         //movie.Actors.Select(a => new ActorDto(a.Id, a.Name, a.BirthYear)).ToList()
+        //        mapper.ProjectTo<ActorDto>(_context.Actors).ToList()
+        //        : null,
+        //    options.withGenres ?
+        //         //movie.Genres.Select(g => new GenreDto(g.Name)).ToList()
+        //         mapper.ProjectTo<GenreDto>(_context.Genres).ToList()
+        //        : null,
+        //    options.withReviews ?
+        //         //movie.Reviews.Select(r => new ReviewDto(r.ReviewerName, r.Comment, r.Rating)).ToList()
+        //         mapper.ProjectTo<ReviewDto>(_context.Reviews).ToList()
+        //        : null
+        //);
+
+        var response = mapper.Map<MovieAllDetailsDto>(movie);
 
         return Ok(response);
     }
@@ -176,7 +179,7 @@ public class MoviesController : ControllerBase
         // movie.Year = dto.Year;
         //movie.Duration = dto.Duration;
 
-        mapper.Map(dto, movie); 
+        mapper.Map(dto, movie);
 
         try
         {
@@ -191,8 +194,8 @@ public class MoviesController : ControllerBase
         }
 
         //var response = new MovieDto(movie.Id, movie.Title, movie.Year, movie.Duration);
-        var response = mapper.Map<MovieDto>(movie); 
-        
+        var response = mapper.Map<MovieDto>(movie);
+
         return Ok(response);
     }
 
